@@ -1,0 +1,109 @@
+import java.util.Scanner;
+
+public class Main {
+
+    interface Command {
+        void execute();
+    }
+
+    static class Televisor {
+        boolean encendido = false;
+        int volumen = 10;
+        int canal = 1;
+
+        void encender() {
+            encendido = true;
+            System.out.println("Televisor encendido");
+        }
+
+        void apagar() {
+            encendido = false;
+            System.out.println("Televisor apagado");
+        }
+
+        void subirVolumen() {
+            if (encendido)
+                System.out.println("Volumen: " + ++volumen);
+            else
+                System.out.println("Encienda el televisor");
+        }
+
+        void bajarVolumen() {
+            if (encendido) {
+                volumen = Math.max(0, volumen - 1);
+                System.out.println("Volumen: " + volumen);
+            } else {
+                System.out.println("Encienda el televisor");
+            }
+        }
+
+        void cambiarCanal() {
+            if (encendido)
+                System.out.println("Canal: " + ++canal);
+            else
+                System.out.println("Encienda el televisor");
+        }
+    }
+
+    static class Accion implements Command {
+        Runnable accion;
+
+        Accion(Runnable accion) {
+            this.accion = accion;
+        }
+
+        public void execute() {
+            accion.run();
+        }
+    }
+
+    static class ControlRemoto {
+        Command[] botones = new Command[5];
+
+        void configurar(int posicion, Command comando) {
+            botones[posicion] = comando;
+        }
+
+        void presionar(int posicion) {
+            botones[posicion].execute();
+        }
+    }
+
+    public static void main(String[] args) {
+        Scanner sc = new Scanner(System.in);
+        Televisor tv = new Televisor();
+        ControlRemoto control = new ControlRemoto();
+
+        control.configurar(0, new Accion(tv::encender));
+        control.configurar(1, new Accion(tv::apagar));
+        control.configurar(2, new Accion(tv::subirVolumen));
+        control.configurar(3, new Accion(tv::bajarVolumen));
+        control.configurar(4, new Accion(tv::cambiarCanal));
+
+        while (true) {
+            System.out.println("\nCONTROL REMOTO");
+            System.out.println("1. Encender");
+            System.out.println("2. Apagar");
+            System.out.println("3. Subir volumen");
+            System.out.println("4. Bajar volumen");
+            System.out.println("5. Cambiar canal");
+            System.out.println("0. Salir");
+            System.out.print("Opción: ");
+
+            try {
+                int opcion = Integer.parseInt(sc.nextLine());
+
+                if (opcion == 0)
+                    break;
+
+                if (opcion >= 1 && opcion <= 5)
+                    control.presionar(opcion - 1);
+                else
+                    System.out.println("Opción inválida");
+
+            } catch (NumberFormatException e) {
+                System.out.println("Ingrese un número válido");
+            }
+        }
+    }
+}
