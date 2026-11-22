@@ -1,0 +1,131 @@
+import java.util.ArrayList;
+import java.util.List;
+
+public class Main {
+
+    // PATRÓN OBSERVER
+    interface Observer {
+        void update(String mensaje);
+    }
+
+    static class Cliente implements Observer {
+        String nombre;
+
+        Cliente(String nombre) {
+            this.nombre = nombre;
+        }
+
+        public void update(String mensaje) {
+            System.out.println(nombre + ": " + mensaje);
+        }
+    }
+
+    static class Tienda {
+        List<Observer> clientes = new ArrayList<>();
+
+        void attach(Observer cliente) {
+            clientes.add(cliente);
+        }
+
+        void notifyObservers(String mensaje) {
+            for (Observer cliente : clientes)
+                cliente.update(mensaje);
+        }
+    }
+
+    // PATRÓN STRATEGY
+    interface Strategy {
+        double calcular(double precio);
+    }
+
+    static class SinDescuento implements Strategy {
+        public double calcular(double precio) {
+            return precio;
+        }
+    }
+
+    static class Promocion implements Strategy {
+        public double calcular(double precio) {
+            return precio * 0.80;
+        }
+    }
+
+    static class Calculadora {
+        Strategy estrategia = new SinDescuento();
+
+        void setStrategy(Strategy estrategia) {
+            this.estrategia = estrategia;
+        }
+
+        double calcular(double precio) {
+            return estrategia.calcular(precio);
+        }
+    }
+
+    // PATRÓN COMMAND
+    interface Command {
+        void execute();
+    }
+
+    static class Pedido {
+        boolean confirmado = false;
+
+        void confirmar(double total) {
+            confirmado = true;
+            System.out.println("Pedido confirmado: S/ " + total);
+        }
+
+        void cancelar() {
+            confirmado = false;
+            System.out.println("Pedido cancelado");
+        }
+    }
+
+    static class Confirmar implements Command {
+        Pedido pedido;
+        double total;
+
+        Confirmar(Pedido pedido, double total) {
+            this.pedido = pedido;
+            this.total = total;
+        }
+
+        public void execute() {
+            pedido.confirmar(total);
+        }
+    }
+
+    static class Cancelar implements Command {
+        Pedido pedido;
+
+        Cancelar(Pedido pedido) {
+            this.pedido = pedido;
+        }
+
+        public void execute() {
+            pedido.cancelar();
+        }
+    }
+
+    public static void main(String[] args) {
+        Tienda tienda = new Tienda();
+
+        tienda.attach(new Cliente("Ana"));
+        tienda.attach(new Cliente("Leonardo"));
+
+        tienda.notifyObservers("¡Promoción del 20%!");
+
+        Calculadora calculadora = new Calculadora();
+        calculadora.setStrategy(new Promocion());
+
+        double total = calculadora.calcular(150);
+
+        Pedido pedido = new Pedido();
+
+        Command confirmar = new Confirmar(pedido, total);
+        Command cancelar = new Cancelar(pedido);
+
+        confirmar.execute();
+        cancelar.execute();
+    }
+}
