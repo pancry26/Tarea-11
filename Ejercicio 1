@@ -4,10 +4,6 @@ import java.util.Scanner;
 
 public class Main {
 
-    // =========================
-    // PATRÓN OBSERVER
-    // =========================
-
     interface Observer {
         void update(String mensaje);
     }
@@ -75,10 +71,6 @@ public class Main {
             }
         }
     }
-
-    // =========================
-    // PROGRAMA PRINCIPAL
-    // =========================
 
     public static void main(String[] args) {
 
