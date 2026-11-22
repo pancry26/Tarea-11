@@ -1,0 +1,200 @@
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Scanner;
+
+public class Main {
+
+    static class Producto {
+        String nombre;
+        double precio;
+        int cantidad;
+
+        Producto(String nombre, double precio, int cantidad) {
+            this.nombre = nombre;
+            this.precio = precio;
+            this.cantidad = cantidad;
+        }
+
+        double subtotal() {
+            return precio * cantidad;
+        }
+    }
+
+    interface EstrategiaDescuento {
+        double calcular(List<Producto> productos);
+    }
+
+    static double subtotal(List<Producto> productos) {
+        double total = 0;
+
+        for (Producto p : productos)
+            total += p.subtotal();
+
+        return total;
+    }
+
+    static class SinDescuento implements EstrategiaDescuento {
+        public double calcular(List<Producto> productos) {
+            return subtotal(productos);
+        }
+    }
+
+    static class DescuentoFijo implements EstrategiaDescuento {
+        public double calcular(List<Producto> productos) {
+            return subtotal(productos) * 0.90;
+        }
+    }
+
+    static class DescuentoPorcentual
+            implements EstrategiaDescuento {
+
+        public double calcular(List<Producto> productos) {
+            double descuento = 0;
+
+            for (Producto p : productos) {
+                if (p.cantidad >= 2)
+                    descuento += p.subtotal() * 0.30;
+            }
+
+            return subtotal(productos) - descuento;
+        }
+    }
+
+    static class DescuentoPorcentualAcumulado
+            implements EstrategiaDescuento {
+
+        public double calcular(List<Producto> productos) {
+            int cantidadTotal = 0;
+            double menorPrecio = Double.MAX_VALUE;
+
+            for (Producto p : productos) {
+                cantidadTotal += p.cantidad;
+
+                if (p.cantidad > 0)
+                    menorPrecio = Math.min(menorPrecio, p.precio);
+            }
+
+            double total = subtotal(productos);
+
+            if (cantidadTotal >= 3)
+                total -= menorPrecio * 0.50;
+
+            return total;
+        }
+    }
+
+    static class CalculadoraDePrecios {
+        EstrategiaDescuento estrategia;
+
+        void setEstrategia(EstrategiaDescuento estrategia) {
+            this.estrategia = estrategia;
+        }
+
+        double calcular(List<Producto> productos) {
+            return estrategia.calcular(productos);
+        }
+    }
+
+    static int leerEntero(Scanner sc, int minimo) {
+        while (true) {
+            try {
+                int numero = Integer.parseInt(sc.nextLine());
+
+                if (numero >= minimo)
+                    return numero;
+            } catch (NumberFormatException e) {
+                // Se vuelve a solicitar el dato.
+            }
+
+            System.out.print("Ingrese un entero válido: ");
+        }
+    }
+
+    static double leerPrecio(Scanner sc) {
+        while (true) {
+            try {
+                double precio = Double.parseDouble(
+                        sc.nextLine().replace(',', '.'));
+
+                if (Double.isFinite(precio) && precio > 0)
+                    return precio;
+            } catch (NumberFormatException e) {
+                // Se vuelve a solicitar el dato.
+            }
+
+            System.out.print("Ingrese un precio válido: ");
+        }
+    }
+
+    public static void main(String[] args) {
+        Scanner sc = new Scanner(System.in);
+        List<Producto> productos = new ArrayList<>();
+
+        System.out.print("Cantidad de tipos de productos: ");
+        int cantidad = leerEntero(sc, 1);
+
+        for (int i = 0; i < cantidad; i++) {
+            System.out.println("\nPRODUCTO " + (i + 1));
+
+            System.out.print("Nombre: ");
+            String nombre = sc.nextLine();
+
+            System.out.print("Precio: ");
+            double precio = leerPrecio(sc);
+
+            System.out.print("Cantidad: ");
+            int unidades = leerEntero(sc, 1);
+
+            productos.add(
+                    new Producto(nombre, precio, unidades));
+        }
+
+        CalculadoraDePrecios calculadora =
+                new CalculadoraDePrecios();
+
+        while (true) {
+            System.out.println("\nESTRATEGIAS");
+            System.out.println("1. Sin descuento");
+            System.out.println("2. Descuento fijo 10%");
+            System.out.println("3. Dos iguales: 30%");
+            System.out.println("4. Tres o más: 50% del más barato");
+            System.out.println("0. Salir");
+            System.out.print("Seleccione: ");
+
+            int opcion = leerEntero(sc, 0);
+
+            if (opcion == 0)
+                break;
+
+            switch (opcion) {
+                case 1:
+                    calculadora.setEstrategia(
+                            new SinDescuento());
+                    break;
+                case 2:
+                    calculadora.setEstrategia(
+                            new DescuentoFijo());
+                    break;
+                case 3:
+                    calculadora.setEstrategia(
+                            new DescuentoPorcentual());
+                    break;
+                case 4:
+                    calculadora.setEstrategia(
+                            new DescuentoPorcentualAcumulado());
+                    break;
+                default:
+                    System.out.println("Opción inválida");
+                    continue;
+            }
+
+            System.out.printf(
+                    "Subtotal: S/ %.2f%n",
+                    subtotal(productos));
+
+            System.out.printf(
+                    "Precio final: S/ %.2f%n",
+                    calculadora.calcular(productos));
+        }
+    }
+}
