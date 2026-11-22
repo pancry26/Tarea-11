@@ -1,0 +1,56 @@
+//requires java.desktop;
+import java.util.ArrayList;
+import java.util.List;
+
+public class Main {
+
+    interface Observer {
+        void update(String mensaje);
+    }
+
+    static class Usuario implements Observer {
+        String nombre;
+
+        Usuario(String nombre) {
+            this.nombre = nombre;
+        }
+
+        public void update(String mensaje) {
+            System.out.println(nombre + " recibió: " + mensaje);
+        }
+    }
+
+    static class Notificador {
+        List<Observer> usuarios = new ArrayList<>();
+
+        void attach(Observer usuario) {
+            if (!usuarios.contains(usuario))
+                usuarios.add(usuario);
+        }
+
+        void detach(Observer usuario) {
+            usuarios.remove(usuario);
+        }
+
+        void notifyObservers(String mensaje) {
+            for (Observer usuario : usuarios)
+                usuario.update(mensaje);
+        }
+    }
+
+    public static void main(String[] args) {
+        Notificador sistema = new Notificador();
+
+        Usuario ana = new Usuario("Ana");
+        Usuario leo = new Usuario("Leonardo");
+
+        sistema.attach(ana);
+        sistema.attach(leo);
+
+        sistema.notifyObservers("Nueva promoción disponible");
+
+        sistema.detach(ana);
+
+        sistema.notifyObservers("Producto nuevamente en stock");
+    }
+}
