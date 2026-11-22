@@ -1,0 +1,111 @@
+import java.util.Scanner;
+
+public class Main {
+
+    interface Estrategia {
+        double calcular(double precio);
+    }
+
+    static class SinDescuento implements Estrategia {
+        public double calcular(double precio) {
+            return precio;
+        }
+    }
+
+    static class Descuento1 implements Estrategia {
+        private double porcentaje;
+
+        Descuento1(double porcentaje) {
+            this.porcentaje = porcentaje;
+        }
+
+        public double calcular(double precio) {
+            return precio - (precio * porcentaje / 100);
+        }
+    }
+
+    static class Descuento2 implements Estrategia {
+        private double porcentaje;
+
+        Descuento2(double porcentaje) {
+            this.porcentaje = porcentaje;
+        }
+
+        public double calcular(double precio) {
+            return precio - (precio * porcentaje / 100);
+        }
+    }
+
+    static class Calculadora {
+        private Estrategia estrategia;
+
+        void setEstrategia(Estrategia estrategia) {
+            this.estrategia = estrategia;
+        }
+
+        double calcular(double precio) {
+            return estrategia.calcular(precio);
+        }
+    }
+
+    static double leerNumero(Scanner sc, String mensaje,
+                             double minimo, double maximo) {
+        while (true) {
+            System.out.print(mensaje);
+
+            try {
+                double numero = Double.parseDouble(
+                        sc.nextLine().trim().replace(',', '.'));
+
+                if (Double.isFinite(numero)
+                        && numero >= minimo && numero <= maximo) {
+                    return numero;
+                }
+            } catch (NumberFormatException e) {
+                // Solicitar nuevamente.
+            }
+
+            System.out.println("Ingrese un valor válido.");
+        }
+    }
+
+    public static void main(String[] args) {
+        Scanner sc = new Scanner(System.in);
+        Calculadora calculadora = new Calculadora();
+
+        System.out.println("=== SISTEMA DE DESCUENTOS ===");
+
+        double precio = leerNumero(
+                sc, "Ingrese el precio del producto: S/ ",
+                0, Double.MAX_VALUE);
+
+        double porcentaje1 = leerNumero(
+                sc, "Ingrese el primer descuento (%): ",
+                0, 100);
+
+        double porcentaje2 = leerNumero(
+                sc, "Ingrese el segundo descuento (%): ",
+                0, 100);
+
+        calculadora.setEstrategia(new SinDescuento());
+        double resultado0 = calculadora.calcular(precio);
+
+        calculadora.setEstrategia(new Descuento1(porcentaje1));
+        double resultado1 = calculadora.calcular(precio);
+
+        calculadora.setEstrategia(new Descuento2(porcentaje2));
+        double resultado2 = calculadora.calcular(precio);
+
+        System.out.println("\n=== RESULTADOS ===");
+
+        System.out.printf("Precio original: S/ %.2f%n", resultado0);
+
+        System.out.printf(
+                "Con %.2f%% de descuento: S/ %.2f%n",
+                porcentaje1, resultado1);
+
+        System.out.printf(
+                "Con %.2f%% de descuento: S/ %.2f%n",
+                porcentaje2, resultado2);
+    }
+}
