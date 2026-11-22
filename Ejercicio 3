@@ -1,0 +1,338 @@
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Scanner;
+
+public class Main {
+    interface Observer {
+        void update(String mensaje);
+    }
+
+    static class Usuario implements Observer {
+        String nombre;
+
+        Usuario(String nombre) {
+            this.nombre = nombre;
+        }
+
+        public void update(String mensaje) {
+            System.out.println(nombre + " recibió: " + mensaje);
+        }
+    }
+
+    static class Notificacion {
+        List<Usuario> usuarios = new ArrayList<>();
+
+        void suscribir(String nombre) {
+            for (Usuario usuario : usuarios) {
+                if (usuario.nombre.equalsIgnoreCase(nombre)) {
+                    System.out.println("El usuario ya está suscrito.");
+                    return;
+                }
+            }
+
+            usuarios.add(new Usuario(nombre));
+            System.out.println(nombre + " se ha suscrito correctamente.");
+        }
+
+        void desuscribir(String nombre) {
+            for (int i = 0; i < usuarios.size(); i++) {
+                if (usuarios.get(i).nombre.equalsIgnoreCase(nombre)) {
+                    usuarios.remove(i);
+                    System.out.println(
+                        nombre + " se ha desuscrito correctamente.");
+                    return;
+                }
+            }
+
+            System.out.println("El usuario no está suscrito.");
+        }
+
+        void publicar(String mensaje) {
+            if (usuarios.isEmpty()) {
+                System.out.println("No hay usuarios suscritos.");
+                return;
+            }
+
+            for (Usuario usuario : usuarios) {
+                usuario.update(mensaje);
+            }
+        }
+    }
+
+    static class Producto {
+        String nombre;
+        double precio;
+        int cantidad;
+
+        Producto(String nombre, double precio, int cantidad) {
+            this.nombre = nombre;
+            this.precio = precio;
+            this.cantidad = cantidad;
+        }
+
+        double subtotal() {
+            return precio * cantidad;
+        }
+    }
+
+    interface EstrategiaDescuento {
+        double calcular(List<Producto> productos);
+    }
+
+    static double subtotal(List<Producto> productos) {
+        double total = 0;
+
+        for (Producto p : productos) {
+            total += p.subtotal();
+        }
+
+        return total;
+    }
+
+    static class SinDescuento implements EstrategiaDescuento {
+        public double calcular(List<Producto> productos) {
+            return subtotal(productos);
+        }
+    }
+
+    static class DescuentoFijo implements EstrategiaDescuento {
+        public double calcular(List<Producto> productos) {
+            return subtotal(productos) * 0.90;
+        }
+    }
+
+    static class DescuentoPorcentual
+            implements EstrategiaDescuento {
+
+        public double calcular(List<Producto> productos) {
+            double descuento = 0;
+
+            for (Producto p : productos) {
+                if (p.cantidad >= 2) {
+                    descuento += p.subtotal() * 0.30;
+                }
+            }
+
+            return subtotal(productos) - descuento;
+        }
+    }
+
+    static class DescuentoPorcentualAcumulado
+            implements EstrategiaDescuento {
+
+        public double calcular(List<Producto> productos) {
+            int cantidadTotal = 0;
+            double menorPrecio = Double.MAX_VALUE;
+
+            for (Producto p : productos) {
+                cantidadTotal += p.cantidad;
+
+                if (p.cantidad > 0) {
+                    menorPrecio = Math.min(menorPrecio, p.precio);
+                }
+            }
+
+            double total = subtotal(productos);
+
+            if (cantidadTotal >= 3) {
+                total -= menorPrecio * 0.50;
+            }
+
+            return total;
+        }
+    }
+
+    static class CalculadoraDePrecios {
+        EstrategiaDescuento estrategia;
+
+        void setEstrategia(EstrategiaDescuento estrategia) {
+            this.estrategia = estrategia;
+        }
+
+        double calcular(List<Producto> productos) {
+            return estrategia.calcular(productos);
+        }
+    }
+
+    // ==================================
+    // MÉTODOS DE ENTRADA
+    // ==================================
+
+    static int leerEntero(Scanner sc, int minimo) {
+        while (true) {
+            try {
+                int numero = Integer.parseInt(sc.nextLine());
+
+                if (numero >= minimo) {
+                    return numero;
+                }
+            } catch (NumberFormatException e) {
+                // Solicitar nuevamente
+            }
+
+            System.out.print("Ingrese un número válido: ");
+        }
+    }
+
+    static double leerPrecio(Scanner sc) {
+        while (true) {
+            try {
+                double precio = Double.parseDouble(
+                    sc.nextLine().trim().replace(',', '.'));
+
+                if (Double.isFinite(precio) && precio > 0) {
+                    return precio;
+                }
+            } catch (NumberFormatException e) {
+                // Solicitar nuevamente
+            }
+
+            System.out.print("Ingrese un precio válido: ");
+        }
+    }
+
+    // ==================================
+    // PROGRAMA PRINCIPAL
+    // ==================================
+
+    public static void main(String[] args) {
+        Scanner sc = new Scanner(System.in);
+        Notificacion sistema = new Notificacion();
+        List<Producto> productos = new ArrayList<>();
+        CalculadoraDePrecios calculadora =
+                new CalculadoraDePrecios();
+
+        while (true) {
+            System.out.println("\n=== SISTEMA DE TIENDA ===");
+            System.out.println("1. Suscribir usuario");
+            System.out.println("2. Desuscribir usuario");
+            System.out.println("3. Publicar promoción");
+            System.out.println("4. Actualizar producto");
+            System.out.println("5. Registrar productos");
+            System.out.println("6. Calcular descuentos");
+            System.out.println("0. Salir");
+            System.out.print("Seleccione una opción: ");
+
+            String opcion = sc.nextLine();
+
+            switch (opcion) {
+
+                case "1":
+                    System.out.print("Ingrese el nombre del usuario: ");
+                    String nombre = sc.nextLine().trim();
+
+                    if (nombre.isEmpty()) {
+                        System.out.println("El nombre no puede estar vacío.");
+                    } else {
+                        sistema.suscribir(nombre);
+                    }
+                    break;
+
+                case "2":
+                    System.out.print(
+                        "Ingrese el nombre del usuario a desuscribir: ");
+                    String eliminar = sc.nextLine().trim();
+
+                    sistema.desuscribir(eliminar);
+                    break;
+
+                case "3":
+                    sistema.publicar("¡Promoción especial!");
+                    break;
+
+                case "4":
+                    sistema.publicar("¡Producto actualizado!");
+                    break;
+
+                case "5":
+                    productos.clear();
+
+                    System.out.print(
+                        "Cantidad de tipos de productos: ");
+                    int cantidad = leerEntero(sc, 1);
+
+                    for (int i = 0; i < cantidad; i++) {
+                        System.out.println("\nPRODUCTO " + (i + 1));
+
+                        System.out.print("Nombre: ");
+                        String producto = sc.nextLine();
+
+                        System.out.print("Precio: ");
+                        double precio = leerPrecio(sc);
+
+                        System.out.print("Cantidad: ");
+                        int unidades = leerEntero(sc, 1);
+
+                        productos.add(
+                            new Producto(producto, precio, unidades));
+                    }
+
+                    System.out.println("Productos registrados.");
+                    break;
+
+                case "6":
+                    if (productos.isEmpty()) {
+                        System.out.println(
+                            "Primero debe registrar productos.");
+                        break;
+                    }
+
+                    System.out.println("\nESTRATEGIAS DE DESCUENTO");
+                    System.out.println("1. Sin descuento");
+                    System.out.println("2. Descuento fijo 10%");
+                    System.out.println(
+                        "3. Dos iguales: descuento 30%");
+                    System.out.println(
+                        "4. Tres o más: 50% del más barato");
+                    System.out.print("Seleccione: ");
+
+                    int descuento = leerEntero(sc, 1);
+
+                    switch (descuento) {
+                        case 1:
+                            calculadora.setEstrategia(
+                                new SinDescuento());
+                            break;
+
+                        case 2:
+                            calculadora.setEstrategia(
+                                new DescuentoFijo());
+                            break;
+
+                        case 3:
+                            calculadora.setEstrategia(
+                                new DescuentoPorcentual());
+                            break;
+
+                        case 4:
+                            calculadora.setEstrategia(
+                                new DescuentoPorcentualAcumulado());
+                            break;
+
+                        default:
+                            System.out.println("Opción inválida.");
+                            continue;
+                    }
+
+                    double total = calculadora.calcular(productos);
+
+                    System.out.println("\n=== RESULTADOS ===");
+                    System.out.printf(
+                        "Subtotal: S/ %.2f%n",
+                        subtotal(productos));
+
+                    System.out.printf(
+                        "Precio final: S/ %.2f%n", total);
+                    break;
+
+                case "0":
+                    System.out.println("Programa finalizado.");
+                    sc.close();
+                    return;
+
+                default:
+                    System.out.println("Opción inválida.");
+            }
+        }
+    }
+}
