@@ -1,0 +1,139 @@
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Scanner;
+
+public class Main {
+
+    // =========================
+    // PATRÓN OBSERVER
+    // =========================
+
+    interface Observer {
+        void update(String mensaje);
+    }
+
+    // CLASE USUARIO
+    static class Usuario implements Observer {
+        String nombre;
+
+        Usuario(String nombre) {
+            this.nombre = nombre;
+        }
+
+        public void update(String mensaje) {
+            System.out.println(nombre + " recibió: " + mensaje);
+        }
+    }
+
+    // CLASE NOTIFICACIÓN
+    static class Notificacion {
+
+        List<Usuario> usuarios = new ArrayList<>();
+
+        // SUSCRIBIR USUARIO
+        void suscribir(String nombre) {
+
+            for (Usuario usuario : usuarios) {
+                if (usuario.nombre.equalsIgnoreCase(nombre)) {
+                    System.out.println("El usuario ya está suscrito.");
+                    return;
+                }
+            }
+
+            Usuario nuevo = new Usuario(nombre);
+            usuarios.add(nuevo);
+
+            System.out.println(nombre + " se ha suscrito correctamente.");
+        }
+
+        // DESUSCRIBIR USUARIO
+        void desuscribir(String nombre) {
+
+            for (Usuario usuario : usuarios) {
+                if (usuario.nombre.equalsIgnoreCase(nombre)) {
+                    usuarios.remove(usuario);
+
+                    System.out.println(
+                            nombre + " se ha desuscrito correctamente.");
+                    return;
+                }
+            }
+
+            System.out.println("El usuario no está suscrito.");
+        }
+
+        // PUBLICAR NOTIFICACIONES
+        void publicar(String mensaje) {
+
+            if (usuarios.isEmpty()) {
+                System.out.println("No hay usuarios suscritos.");
+                return;
+            }
+
+            for (Usuario usuario : usuarios) {
+                usuario.update(mensaje);
+            }
+        }
+    }
+
+    // =========================
+    // PROGRAMA PRINCIPAL
+    // =========================
+
+    public static void main(String[] args) {
+
+        Scanner sc = new Scanner(System.in);
+        Notificacion sistema = new Notificacion();
+
+        while (true) {
+
+            System.out.println("\n=== SISTEMA DE NOTIFICACIONES ===");
+            System.out.println("1. Suscribir usuario");
+            System.out.println("2. Desuscribir usuario");
+            System.out.println("3. Publicar promoción");
+            System.out.println("4. Actualizar producto");
+            System.out.println("0. Salir");
+            System.out.print("Seleccione una opción: ");
+
+            String opcion = sc.nextLine();
+
+            switch (opcion) {
+
+                case "1":
+                    System.out.print("Ingrese el nombre del usuario: ");
+                    String nombre = sc.nextLine().trim();
+
+                    if (nombre.isEmpty()) {
+                        System.out.println("El nombre no puede estar vacío.");
+                    } else {
+                        sistema.suscribir(nombre);
+                    }
+                    break;
+
+                case "2":
+                    System.out.print(
+                            "Ingrese el nombre del usuario a desuscribir: ");
+                    String eliminar = sc.nextLine().trim();
+
+                    sistema.desuscribir(eliminar);
+                    break;
+
+                case "3":
+                    sistema.publicar("¡Promoción especial!");
+                    break;
+
+                case "4":
+                    sistema.publicar("¡Producto actualizado!");
+                    break;
+
+                case "0":
+                    System.out.println("Programa finalizado.");
+                    sc.close();
+                    return;
+
+                default:
+                    System.out.println("Opción inválida.");
+            }
+        }
+    }
+}
